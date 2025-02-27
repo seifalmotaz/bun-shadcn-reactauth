@@ -1,4 +1,16 @@
-# Template Info
+# React Project Template
+
+### Built with Bun, Vite, Tailwind CSS, Shadcn, and React Auth
+
+Kickstart your next project with this React template, seamlessly integrated with:
+
+- **Bun:** for ultra-fast runtime.
+- **Vite:** for lightning-fast development and build.
+- **Tailwind CSS:** for rapid UI design.
+- **Shadcn:** for enriched components and UI elements.
+- **React Auth:** for secure and scalable authentication.
+
+## Template Info
 
 ## bun-shadcnreact
 
@@ -52,13 +64,13 @@ If you are developing a production application, we recommend updating the config
 
 ```js
 export default {
-	// other rules...
-	parserOptions: {
-		ecmaVersion: 'latest',
-		sourceType: 'module',
-		project: ['./tsconfig.json', './tsconfig.node.json'],
-		tsconfigRootDir: __dirname,
-	},
+  // other rules...
+  parserOptions: {
+    ecmaVersion: "latest",
+    sourceType: "module",
+    project: ["./tsconfig.json", "./tsconfig.node.json"],
+    tsconfigRootDir: __dirname,
+  },
 };
 ```
 
