@@ -1,0 +1,198 @@
+// prisma/schema.prisma
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Auth User model for users who will order the food
+model AuthUser {
+  id        Int       @id @default(autoincrement())
+  name      String
+  phone     String    @unique
+  lastLogin DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relation with OTP model
+  otp                       OTP[]
+  orders                    Order[]
+  promoCodes                PromoCode[]
+  loyaltyPoints             Int                        @default(0)
+  loyaltyPointsTransactions LoyaltyPointsTransaction[]
+}
+
+// OTP model for storing the OTP for the user
+model OTP {
+  id         Int      @id @default(autoincrement())
+  otp        String
+  validUntil DateTime
+  authUserId Int
+  authUser   AuthUser @relation(fields: [authUserId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+// Food model to store the crepe details
+model FoodItem {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relation with Order model
+  images         FoodImage[]
+  OrderItem      OrderItem[]
+  Price          Price[]
+  categoryId     Int
+  category       Category            @relation(fields: [categoryId], references: [id])
+  customizations FoodCustomization[]
+}
+
+// Price model to store the price details
+model Price {
+  id        Int         @id @default(autoincrement())
+  price     Float
+  active    Boolean
+  foodId    Int
+  food      FoodItem    @relation(fields: [foodId], references: [id])
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  deletedAt DateTime?
+  OrderItem OrderItem[]
+}
+
+// Image model to store the image details
+model FoodImage {
+  id       Int       @id @default(autoincrement())
+  url      String
+  FoodItem FoodItem? @relation(fields: [foodId], references: [id])
+  foodId   Int?
+}
+
+// Order model to store the order details
+model Order {
+  id              Int           @id @default(autoincrement())
+  authUserId      Int
+  authUser        AuthUser      @relation(fields: [authUserId], references: [id])
+  totalPrice      Float
+  finalPrice      Float
+  discountId      Int?
+  discount        Discount?     @relation(fields: [discountId], references: [id])
+  discountAmount  Float         @default(0)
+  createdAt       DateTime      @default(now())
+  deletedAt       DateTime?
+  OrderItem       OrderItem[]
+  scheduledFor    DateTime?
+  paymentMethodId Int
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  status          OrderStatus   @default(PENDING)
+}
+
+// OrderItem model to store the order item details
+model OrderItem {
+  id             Int                 @id @default(autoincrement())
+  orderId        Int
+  order          Order               @relation(fields: [orderId], references: [id])
+  foodId         Int
+  food           FoodItem            @relation(fields: [foodId], references: [id])
+  priceId        Int
+  price          Price               @relation(fields: [priceId], references: [id])
+  quantity       Int
+  discountId     Int?
+  discount       Discount?           @relation(fields: [discountId], references: [id])
+  discountAmount Float               @default(0)
+  createdAt      DateTime            @default(now())
+  deletedAt      DateTime?
+  customizations FoodCustomization[]
+}
+
+// Discount model to store the discount details
+model Discount {
+  id                 Int    @id @default(autoincrement())
+  name               String
+  discountPercentage Float?
+  discountMaxAmount  Float?
+  discountMinAmount  Float?
+  discountFlatAmount Float?
+  minimumCharge      Float  @default(0)
+
+  validUntil DateTime
+  createdAt  DateTime    @default(now())
+  deletedAt  DateTime?
+  OrderItem  OrderItem[]
+  Order      Order[]
+  PromoCode  PromoCode[]
+}
+
+// Model to store different payment methods
+model PaymentMethod {
+  id    Int     @id @default(autoincrement())
+  name  String
+  Order Order[]
+}
+
+// Enum to track order status
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COOKING
+  OUT_FOR_DELIVERY
+  DELIVERED
+}
+
+// Model to store promo codes
+model PromoCode {
+  id         Int        @id @default(autoincrement())
+  code       String     @unique
+  discountId Int
+  discount   Discount   @relation(fields: [discountId], references: [id])
+  validUntil DateTime
+  usedBy     AuthUser[]
+}
+
+// Model to store loyalty points transactions
+model LoyaltyPointsTransaction {
+  id         Int             @id @default(autoincrement())
+  points     Int
+  type       TransactionType
+  authUserId Int
+  authUser   AuthUser        @relation(fields: [authUserId], references: [id])
+  createdAt  DateTime        @default(now())
+}
+
+// Enum to specify transaction type
+enum TransactionType {
+  EARNED
+  REDEEMED
+}
+
+// Category model to categorize food items
+model Category {
+  id        Int        @id @default(autoincrement())
+  name      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+  foodItems FoodItem[]
+}
+
+// FoodCustomization model to handle add-ons and ingredient choices
+model FoodCustomization {
+  id         Int         @id @default(autoincrement())
+  name       String
+  price      Float
+  foodId     Int
+  food       FoodItem    @relation(fields: [foodId], references: [id])
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  deletedAt  DateTime?
+  orderItems OrderItem[]
+}
